@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Clients</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0f1117; --surface:  #1a1d27; --card:    #22263a; --border: #2e3248;
+      --text:     #eef0f6; --muted:    #8890b0;
+      --blue:     #4f8ef7; --blue-lt:  #1a2a4a;
+      --green:    #34d399; --green-lt: #0d2e24;
+      --amber:    #fbbf24; --amber-lt: #2e2200;
+      --purple:   #a78bfa; --purple-lt:#1e1535;
+      --pink:     #f472b6; --pink-lt:  #2e0f1f;
+      --teal:     #2dd4bf; --teal-lt:  #0a2422;
+      --orange:   #fb923c; --orange-lt:#2e1500;
+      --red:      #f87171; --red-lt:   #2e0f0f;
+      --indigo:   #818cf8; --indigo-lt:#151830;
+      --cyan:     #22d3ee; --cyan-lt:  #0a2028;
+      --lime:     #a3e635; --lime-lt:  #1a2e00;
+      --rose:     #fb7185; --rose-lt:  #2e0f15;
+      --r:        14px;
+      --f:        'Inter', sans-serif;
+      --fm:       'JetBrains Mono', monospace;
+    }
+    body.light {
+      --bg:       #f0f2f5 !important;
+      --surface:  #ffffff !important;
+      --card:     #f8f9fb !important;
+      --border:   #dde1ea !important;
+      --text:     #1a1e2e !important;
+      --muted:    #6b7280 !important;
+      --blue-lt:  #dbeafe !important;
+      --green-lt: #d1fae5 !important;
+      --amber-lt: #fef3c7 !important;
+      --purple-lt:#ede9fe !important;
+      --pink-lt:  #fce7f3 !important;
+      --teal-lt:  #ccfbf1 !important;
+      --orange-lt:#ffedd5 !important;
+      --red-lt:   #fee2e2 !important;
+      --indigo-lt:#e0e7ff !important;
+      --cyan-lt:  #cffafe !important;
+      --lime-lt:  #ecfccb !important;
+      --rose-lt:  #ffe4e6 !important;
+    }
+    body.light { background: #f0f2f5 !important; color: #1a1e2e !important; }
+    body { font-family: var(--f); background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; font-size: 15px; line-height: 1.5; }
+
+    /* ── Header ── */
+    .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; max-width:960px; margin-left:auto; margin-right:auto; }
+    .header-title { font-size:20px; font-weight:700; }
+    .header-meta  { font-size:13px; color:var(--muted); margin-top:3px; }
+    .hbadge { font-size:12px; font-family:var(--fm); padding:5px 14px; border-radius:20px; font-weight:500; background:var(--green-lt); color:var(--green); }
+
+    /* ── Launcher 4×3 ── */
+    .launcher { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:960px; margin:0 auto; }
+    @media(max-width:720px){ .launcher{ grid-template-columns:repeat(2,1fr); } }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:1.25rem 1rem 1rem; cursor:pointer; transition:transform .15s,border-color .15s,box-shadow .15s; display:flex; flex-direction:column; align-items:flex-start; gap:10px; position:relative; overflow:hidden; }
+    .card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,var(--cc,transparent) 0%,transparent 60%); opacity:.1; pointer-events:none; }
+    .card:hover { transform:translateY(-2px); border-color:var(--cc,var(--border)); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+    .card:active { transform:translateY(0); }
+    .card-icon { font-size:26px; width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--ci,var(--surface)); }
+    .card-label { font-size:14px; font-weight:600; }
+    .card-desc  { font-size:12px; color:var(--muted); line-height:1.4; }
+
+    /* ── Vue plein écran ── */
+    .view-overlay { display:none; position:fixed; inset:0; background:var(--bg); z-index:50; overflow-y:auto; padding:2rem; }
+    .view-overlay.open { display:block; }
+    .view-inner { max-width:960px; margin:0 auto; }
+    .view-header { display:flex; align-items:center; gap:12px; margin-bottom:1.5rem; }
+    .btn-back { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:7px 16px; font-size:14px; font-family:var(--f); color:var(--muted); cursor:pointer; }
+    .btn-back:hover { color:var(--text); }
+    .view-title { font-size:18px; font-weight:700; }
+    .search-bar { width:100%; padding:10px 16px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font-family:var(--f); font-size:14px; margin-bottom:1rem; outline:none; }
+    .search-bar:focus { border-color:var(--blue); }
+    .search-bar::placeholder { color:var(--muted); }
+
+    /* ── Liste orgs ── */
+    .org-row { display:grid; grid-template-columns:1fr 160px 180px 100px; align-items:center; gap:12px; padding:11px 14px; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; border-radius:8px; transition:background .12s; }
+    .org-row:hover { background:var(--card); }
+    .org-name   { font-weight:600; }
+    .org-email  { font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .org-sector { font-size:13px; color:var(--teal); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .org-city   { font-size:13px; color:var(--muted); text-align:right; }
+
+    /* ── Tableau générique ── */
+    .data-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .data-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; padding:9px 12px; border-bottom:1px solid var(--border); }
+    .data-table td { padding:11px 12px; border-bottom:1px solid var(--border); }
+    .data-table tr:last-child td { border-bottom:none; }
+    .data-table tr:hover td { background:var(--card); }
+    .fm { font-family:var(--fm); font-size:13px; }
+
+    /* ── Groupes ── */
+    .group-block { margin-bottom:1.75rem; }
+    .group-title { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600; margin-bottom:.5rem; padding-bottom:7px; border-bottom:1px solid var(--border); }
+
+    /* ── Pagination ── */
+    .pagination { display:flex; align-items:center; gap:8px; margin-top:1.25rem; font-size:14px; color:var(--muted); }
+    .page-btn { padding:6px 14px; border:1px solid var(--border); border-radius:6px; background:var(--card); font-family:var(--f); font-size:13px; cursor:pointer; color:var(--text); }
+    .page-btn:disabled { opacity:.35; cursor:default; }
+    .page-btn:hover:not(:disabled) { background:var(--surface); }
+    .state-msg { font-size:14px; color:var(--muted); padding:.75rem 0; }
+    .state-err { font-size:14px; color:var(--red); padding:.75rem 0; }
+    .dot-on  { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--green); }
+    .dot-off { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--border); }
+
+    /* ══════════════════════════
+       MODAL ODOO-STYLE + CARROUSEL
+    ══════════════════════════ */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); z-index:100; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:var(--surface); border-radius:18px; border:1px solid var(--border); width:100%; max-width:700px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.5); }
+
+    /* Carrousel nav */
+    .modal-nav { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.5rem .5rem; border-bottom:1px solid var(--border); }
+    .nav-arrows { display:flex; align-items:center; gap:8px; }
+    .nav-btn { background:var(--card); border:1px solid var(--border); border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); font-size:16px; transition:color .15s; }
+    .nav-btn:hover:not(:disabled) { color:var(--text); border-color:var(--blue); }
+    .nav-btn:disabled { opacity:.3; cursor:default; }
+    .nav-counter { font-size:13px; color:var(--muted); font-family:var(--fm); }
+    .modal-close-btn { background:none; border:none; font-size:22px; cursor:pointer; color:var(--muted); }
+    .modal-close-btn:hover { color:var(--text); }
+
+    /* Hero */
+    .modal-hero { padding:1.25rem 1.5rem .5rem; display:flex; align-items:flex-start; gap:1rem; }
+    .modal-avatar { width:68px; height:68px; border-radius:14px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; color:#fff; background:linear-gradient(135deg,var(--purple),var(--blue)); }
+    .modal-hero-info { flex:1; min-width:0; }
+    .modal-type-badge { font-size:11px; padding:2px 10px; border-radius:20px; font-weight:600; background:var(--blue-lt); color:var(--blue); display:inline-block; margin-bottom:5px; }
+    .modal-name  { font-size:22px; font-weight:700; line-height:1.2; margin-bottom:4px; }
+    .modal-sub   { font-size:13px; color:var(--muted); margin-top:2px; }
+    .modal-sub a { color:var(--blue); text-decoration:none; }
+
+    /* Body */
+    .modal-body { padding:1rem 1.5rem 1.5rem; }
+    .modal-tabs { display:flex; border-bottom:1px solid var(--border); margin:0 -1.5rem .75rem; padding:0 1.5rem; }
+    .modal-tab { padding:9px 16px; font-size:14px; font-weight:500; cursor:pointer; border:none; background:none; color:var(--muted); border-bottom:2px solid transparent; font-family:var(--f); transition:color .15s; }
+    .modal-tab.active { color:var(--text); border-bottom:2px solid var(--blue); }
+    .modal-tab-content { display:none; }
+    .modal-tab-content.active { display:block; }
+
+    /* Grille champs */
+    .mfield-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:1rem; }
+    .mfield { padding:10px 14px; border-bottom:1px solid var(--border); }
+    .mfield:nth-last-child(-n+2){ border-bottom:none; }
+    .mfield:nth-child(odd){ border-right:1px solid var(--border); background:var(--card); }
+    .mfield-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:3px; font-weight:600; }
+    .mfield-value { font-size:14px; color:var(--text); word-break:break-word; }
+    .mfield-value a { color:var(--blue); text-decoration:none; }
+    .mfield-tag { display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--amber-lt); color:var(--amber); margin-top:2px; }
+
+    /* Contact card */
+    .contact-card { display:flex; align-items:center; gap:14px; padding:14px 16px; background:var(--card); border-radius:12px; margin-bottom:8px; }
+    .contact-avatar { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,var(--indigo),var(--purple)); flex-shrink:0; }
+    .contact-name { font-size:14px; font-weight:600; }
+    .contact-role { font-size:12px; color:var(--muted); }
+    .contact-email a { color:var(--blue); font-size:13px; text-decoration:none; }
+
+    /* VAT */
+    .vat-row { display:flex; align-items:center; gap:8px; margin-bottom:1rem; }
+    .btn-sm { padding:7px 16px; border-radius:6px; border:none; font-size:13px; font-weight:600; font-family:var(--f); cursor:pointer; background:var(--blue); color:#fff; transition:opacity .15s; }
+    .btn-sm:hover { opacity:.85; }
+    .btn-sm:disabled { opacity:.4; cursor:default; }
+    .vat-result { font-size:13px; padding:5px 12px; border-radius:20px; font-weight:500; }
+    .vat-ok { background:var(--green-lt); color:var(--green); }
+    .vat-ko { background:var(--red-lt);   color:var(--red); }
+    .vat-na { background:var(--card);     color:var(--muted); }
+
+    /* Étoile commande */
+    .star { color:var(--amber); font-size:15px; margin-left:4px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <img src="logoscw.png" alt="SOCIALware" style="height:36px;object-fit:contain;">
+    <img src="numee.webp"  alt="NUMEE ASBL"  style="height:28px;object-fit:contain;">
+  </div>
+  <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+    <p class="header-meta" id="dash-date"></p>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="hbadge" id="status-badge">…</span>
+<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+      <span style="font-size:14px;">🌙</span>
+      <span style="position:relative;display:inline-block;width:40px;height:22px;">
+        <input type="checkbox" id="theme-switch" onchange="toggleTheme(this.checked)" style="opacity:0;width:0;height:0;position:absolute;">
+        <span id="theme-track" style="position:absolute;inset:0;background:var(--border);border-radius:22px;transition:background .2s;"></span>
+        <span id="theme-thumb" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+      </span>
+      <span style="font-size:14px;">☀️</span>
+    </label>
+    </div>
+  </div>
+</div>
+
+<div class="launcher" id="launcher">
+  <div class="card" style="--cc:var(--blue);  --ci:var(--blue-lt)"   onclick="openView('orgs')">        <div class="card-icon">🏢</div><div><p class="card-label">Organisations</p><p class="card-desc">Liste complète avec recherche</p></div></div>
+  <div class="card" style="--cc:var(--purple);--ci:var(--purple-lt)" onclick="openView('doublons')">    <div class="card-icon">🔍</div><div><p class="card-label">Doublons</p><p class="card-desc">Noms ou TVA identiques</p></div></div>
+  <div class="card" style="--cc:var(--amber); --ci:var(--amber-lt)"  onclick="openView('tva')">         <div class="card-icon">⚠️</div><div><p class="card-label">TVA manquante</p><p class="card-desc">Sans numéro TVA</p></div></div>
+  <div class="card" style="--cc:var(--teal);  --ci:var(--teal-lt)"   onclick="openView('langue')">      <div class="card-icon">🌐</div><div><p class="card-label">Par langue</p><p class="card-desc">FR / NL / EN</p></div></div>
+  <div class="card" style="--cc:var(--pink);  --ci:var(--pink-lt)"   onclick="openView('secteur')">     <div class="card-icon">🏷️</div><div><p class="card-label">Par secteur</p><p class="card-desc">Regroupé par activité</p></div></div>
+  <div class="card" style="--cc:var(--indigo);--ci:var(--indigo-lt)" onclick="openView('eligibilite')"> <div class="card-icon">✅</div><div><p class="card-label">Éligibilité</p><p class="card-desc">Contact + secteur</p></div></div>
+  <div class="card" style="--cc:var(--green); --ci:var(--green-lt)"  onclick="openView('commandes')">   <div class="card-icon">📋</div><div><p class="card-label">Commandes</p><p class="card-desc">Toutes les commandes</p></div></div>
+  <div class="card" style="--cc:var(--orange);--ci:var(--orange-lt)" onclick="openView('total')">       <div class="card-icon">💶</div><div><p class="card-label">Total / société</p><p class="card-desc">Chiffre d'affaires agrégé</p></div></div>
+  <div class="card" style="--cc:var(--cyan);  --ci:var(--cyan-lt)"   onclick="openView('recentes')">    <div class="card-icon">🕐</div><div><p class="card-label">Récentes</p><p class="card-desc">Commandes triées par date</p></div></div>
+  <div class="card" style="--cc:var(--lime);  --ci:var(--lime-lt)"   onclick="openView('budget')">      <div class="card-icon">📊</div><div><p class="card-label">Budget</p><p class="card-desc">Budget annuel par org</p></div></div>
+  <div class="card" style="--cc:var(--rose);  --ci:var(--rose-lt)"   onclick="openView('nosite')">      <div class="card-icon">🔗</div><div><p class="card-label">Pas de site web</p><p class="card-desc">Site web non renseigné</p></div></div>
+  <div class="card" style="--cc:var(--red);   --ci:var(--red-lt)"    onclick="openView('contacts')">    <div class="card-icon">👤</div><div><p class="card-label">Contacts</p><p class="card-desc">Nom, fonction, email</p></div></div>
+  <div class="card" style="--cc:var(--blue);  --ci:var(--blue-lt)"   onclick="openView('tel')">           <div class="card-icon">📞</div><div><p class="card-label">Téléphone</p><p class="card-desc">Org, tél. contact, nom contact</p></div></div>
+  <div class="card" style="--cc:var(--teal);  --ci:var(--teal-lt)"   onclick="openView('email')">         <div class="card-icon">✉️</div><div><p class="card-label">Email</p><p class="card-desc">Org, email contact, nom contact</p></div></div>
+  <div class="card" style="--cc:var(--orange);--ci:var(--orange-lt)" onclick="openView('adresse')">       <div class="card-icon">📍</div><div><p class="card-label">Adresse</p><p class="card-desc">Org, adresse, nom contact</p></div></div>
+  <div class="card" style="--cc:var(--purple);--ci:var(--purple-lt)" onclick="openView('abonnes')">       <div class="card-icon">⭐</div><div><p class="card-label">Abonnés</p><p class="card-desc">Organisations cotisantes</p></div></div>
+</div>
+
+<!-- Vue -->
+<div class="view-overlay" id="view-panel">
+  <div class="view-inner">
+    <div class="view-header">
+      <button class="btn-back" onclick="closeView()">← Retour</button>
+      <p class="view-title" id="view-title">—</p>
+    </div>
+    <div id="view-search-wrap" style="display:none">
+      <input class="search-bar" id="search-bar" placeholder="Rechercher par nom, ville, email…" oninput="filterOrgs(this.value)">
+    </div>
+    <div id="view-content"></div>
+    <div class="pagination" id="view-pagination" style="display:none">
+      <button class="page-btn" id="btn-prev" onclick="changePage(-1)" disabled>← Préc.</button>
+      <span id="page-info">—</span>
+      <button class="page-btn" id="btn-next" onclick="changePage(1)">Suiv. →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <!-- Carrousel nav -->
+    <div class="modal-nav">
+      <div class="nav-arrows">
+        <button class="nav-btn" id="nav-prev" onclick="navModal(-1)" title="Précédent">‹</button>
+        <span class="nav-counter" id="nav-counter">—</span>
+        <button class="nav-btn" id="nav-next" onclick="navModal(1)"  title="Suivant">›</button>
+      </div>
+      <button class="modal-close-btn" onclick="closeModalDirect()">×</button>
+    </div>
+
+    <!-- Hero -->
+    <div class="modal-hero">
+      <div class="modal-avatar" id="modal-avatar">?</div>
+      <div class="modal-hero-info">
+        <span class="modal-type-badge" id="modal-type">—</span>
+        <p class="modal-name" id="modal-name">—</p>
+        <p class="modal-sub"  id="modal-email"></p>
+        <p class="modal-sub"  id="modal-phone"></p>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchModalTab('infos',this)">Informations</button>
+        <button class="modal-tab"        onclick="switchModalTab('contact',this)">Contact</button>
+        <button class="modal-tab"        onclick="switchModalTab('finance',this)">Finance</button>
+      </div>
+      <div class="modal-tab-content active" id="mtab-infos">
+        <div class="mfield-grid" id="modal-grid-infos"></div>
+        <div class="vat-row">
+          <button class="btn-sm" id="btn-vat" onclick="checkVAT()">Vérifier TVA</button>
+          <span id="vat-result" class="vat-result vat-na" style="display:none"></span>
+        </div>
+      </div>
+      <div class="modal-tab-content" id="mtab-contact">
+        <div id="modal-contact-content"></div>
+      </div>
+      <div class="modal-tab-content" id="mtab-finance">
+        <div class="mfield-grid" id="modal-grid-finance"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TABLE='995772', TABLE_CMD='996853';
+  const API='/functions/baserow', VIES='/functions/vies';
+  const PAGE_SZ=20;
+  let currentPage=1, totalCount=0, currentView='';
+  let allOrgs=[], currentOrg=null, modalIdx=0, modalList=[];
+  let cmdSocietesSet = new Set(); // sociétés avec au moins 1 commande
+
+  // Date
+  const now=new Date();
+  document.getElementById('dash-date').textContent=
+    now.toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric'})+' — '+
+    now.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'});
+
+  // ── Précharger les sociétés avec commandes ──
+  async function preloadCmdSocietes(){
+    try {
+      const res=await fetch(`${API}?table=${TABLE_CMD}&size=200`);
+      const data=await res.json();
+      (data.results||[]).forEach(r=>{ if(r['Nom de la société']) cmdSocietesSet.add(r['Nom de la société'].trim()); });
+    } catch(e){}
+  }
+  preloadCmdSocietes();
+
+  // ── Launcher ──
+  const VIEW_TITLES={
+    orgs:'🏢 Organisations',doublons:'🔍 Doublons',tva:'⚠️ TVA manquante',
+    langue:'🌐 Par langue',secteur:'🏷️ Par secteur',eligibilite:'✅ Éligibilité',
+    commandes:'📋 Commandes',total:'💶 Total / société',recentes:'🕐 Commandes récentes',
+    budget:'📊 Budget annuel',nosite:'🔗 Pas de site web',contacts:'👤 Contacts'
+  };
+  function openView(name){
+    currentView=name; currentPage=1;
+    document.getElementById('launcher').style.display='none';
+    document.getElementById('view-panel').classList.add('open');
+    document.getElementById('view-search-wrap').style.display=name==='orgs'?'block':'none';
+    document.getElementById('view-pagination').style.display=['orgs','commandes','recentes'].includes(name)?'flex':'none';
+    document.getElementById('search-bar').value='';
+    document.getElementById('view-title').textContent=VIEW_TITLES[name]||name;
+    loadView(name);
+  }
+  function closeView(){
+    document.getElementById('view-panel').classList.remove('open');
+    document.getElementById('launcher').style.display='grid';
+    document.getElementById('view-content').innerHTML='';
+  }
+
+  async function loadView(name){
+    document.getElementById('view-content').innerHTML='<p class="state-msg">Chargement…</p>';
+    const orgViews=['orgs','doublons','tva','langue','secteur','eligibilite','budget','nosite','contacts','tel','email','adresse','abonnes'];
+    if(orgViews.includes(name)) await loadOrgView(name);
+    else await loadCmdView(name);
+  }
+
+  async function fetchOrgs(extra='',size=200,page=1){
+    let url=`${API}?table=${TABLE}&size=${size}&page=${page}`;
+    if(extra) url+=`&filters=${encodeURIComponent(extra)}`;
+    const res=await fetch(url); const data=await res.json();
+    if(!data.results) throw new Error('Réponse invalide');
+    return data;
+  }
+
+  async function loadOrgView(name){
+    const content=document.getElementById('view-content');
+    try {
+      let data;
+      if(name==='orgs'){
+        data=await fetchOrgs('',PAGE_SZ,currentPage);
+        totalCount=data.count; allOrgs=data.results;
+        modalList=allOrgs;
+        renderOrgList(allOrgs); updatePagination();
+      } else if(name==='tva'){
+        data=await fetchOrgs('filter__TVA__empty=true');
+        allOrgs=data.results; modalList=allOrgs; renderOrgList(allOrgs);
+      } else if(name==='nosite'){
+        data=await fetchOrgs('filter__Site Web__empty=true');
+        allOrgs=data.results; modalList=allOrgs; renderOrgList(allOrgs);
+      } else {
+        data=await fetchOrgs();
+        allOrgs=data.results; modalList=allOrgs;
+        if(name==='doublons')      renderDoublons(allOrgs);
+        else if(name==='langue')   renderGrouped(allOrgs,'Langue');
+        else if(name==='secteur')  renderSecteur(allOrgs);
+        else if(name==='eligibilite') renderEligibilite(allOrgs);
+        else if(name==='budget')   renderBudget(allOrgs);
+        else if(name==='contacts') renderContacts(allOrgs);
+        else if(name==='tel')      renderTel(allOrgs);
+        else if(name==='email')    renderEmail(allOrgs);
+        else if(name==='adresse')  renderAdresse(allOrgs);
+        else if(name==='abonnes')  renderAbonnes(allOrgs);
+      }
+      document.getElementById('status-badge').textContent=`${data.count} orgs`;
+    } catch(e){ content.innerHTML=`<p class="state-err">Erreur : ${e.message}</p>`; }
+  }
+
+  // ── Liste orgs (sans col #, sans col Société) ──
+  // Colonnes : Email | Secteur | Ville  — clic ouvre modal
+  function renderOrgList(rows){
+    const c=document.getElementById('view-content');
+    if(!rows.length){ c.innerHTML='<p class="state-msg">Aucun résultat.</p>'; return; }
+    c.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 160px 180px 100px;gap:12px;padding:8px 14px;border-bottom:1px solid var(--border);">
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;">Société</span>
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;">Email</span>
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;">Secteur</span>
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:right;">Ville</span>
+      </div>
+      ${rows.map((r,i)=>`
+      <div class="org-row" onclick="openModal(${i})">
+        <span class="org-name">${r['Nom de la société']||'—'}</span>
+        <span class="org-email">${r['Email principal']||'—'}</span>
+        <span class="org-sector">${r["Secteur d’activité"]||'—'}</span>
+        <span class="org-city">${r['Ville']||'—'}</span>
+      </div>`).join('')}`;
+  }
+
+  function filterOrgs(q){
+    const f=q?allOrgs.filter(r=>
+      (r['Nom de la société']||'').toLowerCase().includes(q.toLowerCase())||
+      (r['Ville']||'').toLowerCase().includes(q.toLowerCase())||
+      (r['Email principal']||'').toLowerCase().includes(q.toLowerCase())
+    ):allOrgs;
+    renderOrgList(f);
+  }
+
+  function renderDoublons(rows){
+    const seen={},dupes=[];
+    rows.forEach(r=>{ const k=(r['Nom de la société']||'').toLowerCase().trim(); if(k){seen[k]=(seen[k]||0)+1; if(seen[k]===2)dupes.push(k);} });
+    const dr=rows.filter(r=>dupes.includes((r['Nom de la société']||'').toLowerCase().trim()));
+    if(!dr.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun doublon détecté.</p>';return;}
+    modalList=dr; renderOrgList(dr);
+  }
+
+  function renderGrouped(rows,field){
+    const groups={};
+    rows.forEach(r=>{const k=r[field]||'—';if(!groups[k])groups[k]=[];groups[k].push(r);});
+    document.getElementById('view-content').innerHTML=Object.keys(groups).sort().map(key=>`
+      <div class="group-block">
+        <p class="group-title">${key} <span style="color:var(--muted);font-weight:400">(${groups[key].length})</span></p>
+        ${groups[key].map(r=>`
+          <div class="org-row" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>
+            <span class="org-name">${r['Nom de la société']||'—'}</span>
+            <span class="org-email">${r['Email principal']||'—'}</span>
+            <span class="org-sector">${r["Secteur d’activité"]||'—'}</span>
+            <span class="org-city">${r['Ville']||'—'}</span>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  // ── Par secteur : Société | Secteur | Ville ──
+  function renderSecteur(rows){
+    const groups={};
+    rows.forEach(r=>{const k=r["Secteur d’activité"]||'—';if(!groups[k])groups[k]=[];groups[k].push(r);});
+    document.getElementById('view-content').innerHTML=Object.keys(groups).sort().map(key=>`
+      <div class="group-block">
+        <p class="group-title">${key} (${groups[key].length})</p>
+        <table class="data-table">
+          <thead><tr><th>Société</th><th>Secteur d’activité</th><th>Ville</th></tr></thead>
+          <tbody>${groups[key].map(r=>`<tr>
+            <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+            <td style="color:var(--teal);font-size:13px">${r["Secteur d’activité"]||'—'}</td>
+            <td style="font-size:13px;color:var(--muted)">${r['Ville']||'—'}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`).join('');
+  }
+
+  function renderEligibilite(rows){
+    if(!rows.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun résultat.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Secteur d’activité</th><th>Ville</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openEligModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Nom de la société']||'—'}</td>
+          <td style="color:var(--teal);font-size:13px">${r["Secteur d’activité"]||'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Ville']||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  function openEligModal(r){
+    document.getElementById('elig-org-name').textContent   = r['Nom de la société']||'—';
+    document.getElementById('elig-org-sector').textContent = r["Secteur d’activité"]||'';
+    const nm = r['Nom du contact']||'?';
+    document.getElementById('elig-avatar').textContent       = nm.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    document.getElementById('elig-contact-name').textContent = r['Nom du contact']||'—';
+    document.getElementById('elig-contact-role').textContent = r['Fonction du contact']||'';
+    document.getElementById('elig-contact-email').innerHTML  = r['Email du contact']
+      ? `<a href="mailto:${r['Email du contact']}">${r['Email du contact']}</a>` : '';
+    const eo = document.getElementById('elig-overlay');
+    eo.style.display = 'flex';
+  }
+  function closeEligModal(e){ if(e.target===document.getElementById('elig-overlay')) closeEligModalDirect(); }
+  function closeEligModalDirect(){ document.getElementById('elig-overlay').style.display='none'; }
+
+
+  function renderBudget(rows){
+    const wb=rows.filter(r=>r['Budget annuel']).sort((a,b)=>parseFloat(b['Budget annuel']||0)-parseFloat(a['Budget annuel']||0));
+    if(!wb.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun budget renseigné.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Secteur</th><th>Nombre d'ETP</th><th>Budget annuel</th></tr></thead>
+        <tbody>${wb.map(r=>`<tr>
+          <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+          <td style="font-size:13px;color:var(--teal)">${r["Secteur d’activité"]||'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r["Nombre d'ETP"]||'—'}</td>
+          <td class="fm" style="font-weight:700;color:var(--lime)">${parseFloat(r['Budget annuel']).toLocaleString('fr-BE')} €</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  function renderContacts(rows){
+    const wc=rows.filter(r=>r['Nom du contact']);
+    if(!wc.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun contact renseigné.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Contact</th><th>Fonction</th><th>Email</th><th>Téléphone</th><th>Société</th></tr></thead>
+        <tbody>${wc.map(r=>{
+          const hasCmds=cmdSocietesSet.has((r['Nom de la société']||'').trim());
+          return `<tr>
+            <td style="font-weight:600">${r['Nom du contact']}${hasCmds?'<span class="star" title="A passé des commandes">★</span>':''}</td>
+            <td style="font-size:13px;color:var(--muted)">${r['Fonction du contact']||'—'}</td>
+            <td style="font-size:13px">${r['Email du contact']?`<a href="mailto:${r['Email du contact']}" style="color:var(--blue)">${r['Email du contact']}</a>`:'—'}</td>
+            <td style="font-size:13px;color:var(--muted)">${r['Téléphone du contact']||'—'}</td>
+            <td style="font-size:13px;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+          </tr>`;}).join('')}</tbody>
+      </table>`;
+  }
+
+
+  function renderTel(rows){
+    const wt=rows.filter(r=>r['Téléphone du contact']||r['Téléphone']||r['Mobile']);
+    if(!wt.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun numéro renseigné.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Téléphone contact</th><th>Contact</th></tr></thead>
+        <tbody>${wt.map(r=>`<tr>
+          <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+          <td class="fm">${r['Téléphone du contact']||r['Téléphone']||r['Mobile']||'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Nom du contact']||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  function renderEmail(rows){
+    const we=rows.filter(r=>r['Email du contact']||r['Email principal']);
+    if(!we.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun email renseigné.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Email contact</th><th>Contact</th></tr></thead>
+        <tbody>${we.map(r=>`<tr>
+          <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+          <td style="font-size:13px">${r['Email du contact']?`<a href="mailto:${r['Email du contact']}" style="color:var(--blue)">${r['Email du contact']}</a>`:r['Email principal']?`<a href="mailto:${r['Email principal']}" style="color:var(--blue)">${r['Email principal']}</a>`:'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Nom du contact']||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  function renderAdresse(rows){
+    const wa=rows.filter(r=>r['Adresse ligne 1']||r['Ville']);
+    if(!wa.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucune adresse renseignée.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Adresse</th><th>Ville</th><th>Contact</th></tr></thead>
+        <tbody>${wa.map(r=>`<tr>
+          <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+          <td style="font-size:13px">${[r['Adresse ligne 1'],r['Adresse ligne 2']].filter(Boolean).join(', ')||'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Code postal']||''} ${r['Ville']||''}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Nom du contact']||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  function renderAbonnes(rows){
+    const wa=rows.filter(r=>r['Abonné']&&parseInt(r['Abonné'])>0);
+    if(!wa.length){document.getElementById('view-content').innerHTML='<p class="state-msg">Aucun abonné trouvé.</p>';return;}
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table">
+        <thead><tr><th>Société</th><th>Étiquettes</th><th>Secteur</th><th>Ville</th></tr></thead>
+        <tbody>${wa.map(r=>`<tr>
+          <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
+          <td><span class="mfield-tag">${r['Étiquettes']||''}</span></td>
+          <td style="font-size:13px;color:var(--teal)">${r["Secteur d’activité"]||'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Ville']||'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }
+
+  // ── Commandes ──
+  async function loadCmdView(name){
+    const content=document.getElementById('view-content');
+    try {
+      let url=`${API}?table=${TABLE_CMD}&size=${name==='total'?200:PAGE_SZ}&page=${currentPage}`;
+      if(name==='recentes') url+='&order_by=-Date';
+      const res=await fetch(url); const data=await res.json();
+      if(!data.results) throw new Error('Réponse invalide');
+      totalCount=data.count;
+      if(name==='total') renderTotal(data.results);
+      else { renderCmdTable(data.results); updatePagination(); document.getElementById('view-pagination').style.display='flex'; }
+    } catch(e){ content.innerHTML=`<p class="state-err">Erreur : ${e.message}</p>`; }
+  }
+
+  function renderCmdTable(rows){
+    const c=document.getElementById('view-content');
+    if(!rows.length){c.innerHTML='<p class="state-msg">Aucune commande.</p>';return;}
+    c.innerHTML=`<table class="data-table"><thead><tr><th>#</th><th>Société</th><th>Produit</th><th>Qté</th><th>Prix</th><th>Total</th><th>Date</th><th></th></tr></thead><tbody>
+      ${rows.map(r=>`<tr>
+        <td class="fm" style="color:var(--muted)">#${r.id}</td>
+        <td style="font-weight:600">${r['Nom de la société']||'—'}</td>
+        <td>${r['Produits']||'—'}</td>
+        <td class="fm">${r['Quantité']||'—'}</td>
+        <td class="fm">${r['Prix']?r['Prix']+' €':'—'}</td>
+        <td class="fm" style="font-weight:700">${r['Prix total']?r['Prix total']+' €':'—'}</td>
+        <td style="font-size:13px;color:var(--muted)">${r['Date']?new Date(r['Date']).toLocaleDateString('fr-BE'):'—'}</td>
+        <td><span class="${r['Active']?'dot-on':'dot-off'}"></span></td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+
+  function renderTotal(rows){
+    const totals={};
+    rows.forEach(r=>{const s=r['Nom de la société']||'—';totals[s]=(totals[s]||0)+parseFloat(r['Prix total']||0);});
+    document.getElementById('view-content').innerHTML=`<table class="data-table"><thead><tr><th>Société</th><th>Total</th></tr></thead><tbody>
+      ${Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([s,t])=>`<tr>
+        <td style="font-weight:600">${s}</td>
+        <td class="fm" style="font-weight:700;color:var(--green)">${t.toFixed(2)} €</td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+
+  // ── Pagination ──
+  function updatePagination(){
+    const tp=Math.ceil(totalCount/PAGE_SZ);
+    document.getElementById('page-info').textContent=`Page ${currentPage} / ${Math.max(1,tp)} — ${totalCount} résultat${totalCount>1?'s':''}`;
+    document.getElementById('btn-prev').disabled=currentPage<=1;
+    document.getElementById('btn-next').disabled=currentPage>=tp;
+  }
+  function changePage(dir){currentPage+=dir;loadView(currentView);}
+
+  // ── Modal + Carrousel ──
+  function openModal(idx){
+    modalList=allOrgs; modalIdx=idx;
+    renderModal(modalList[modalIdx]);
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+  function openModalDirect(r,list){
+    modalList=list||allOrgs;
+    modalIdx=modalList.findIndex(x=>x.id===r.id);
+    if(modalIdx<0){modalList=[r];modalIdx=0;}
+    renderModal(r);
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+  function navModal(dir){
+    modalIdx+=dir;
+    if(modalIdx<0)modalIdx=0;
+    if(modalIdx>=modalList.length)modalIdx=modalList.length-1;
+    renderModal(modalList[modalIdx]);
+  }
+
+  function renderModal(r){
+    currentOrg=r;
+    // Carrousel counter
+    document.getElementById('nav-counter').textContent=`${modalIdx+1} / ${modalList.length}`;
+    document.getElementById('nav-prev').disabled=modalIdx<=0;
+    document.getElementById('nav-next').disabled=modalIdx>=modalList.length-1;
+
+    // Avatar
+    const name=r['Nom de la société']||'?';
+    document.getElementById('modal-avatar').textContent=name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    document.getElementById('modal-name').textContent=name;
+    document.getElementById('modal-type').textContent=r['Type de compte']||'';
+    document.getElementById('modal-email').innerHTML=r['Email principal']?`✉ <a href="mailto:${r['Email principal']}">${r['Email principal']}</a>`:'';
+    document.getElementById('modal-phone').textContent=r['Téléphone']?'📞 '+r['Téléphone']:'';
+
+    // Tab Infos
+    document.getElementById('modal-grid-infos').innerHTML=[
+      ['ID Société', r['ID de la société']||'—'],
+      ['TVA',        r['TVA']||'—'],
+      ['Adresse',    [r['Adresse ligne 1'],r['Adresse ligne 2']].filter(Boolean).join(', ')||'—'],
+      ['Ville',      `${r['Code postal']||''} ${r['Ville']||''}`.trim()||'—'],
+      ['Pays',       r['Pays']||'—'],
+      ['Mobile',     r['Mobile']||'—'],
+      ['Secteur',    r["Secteur d’activité"]||'—'],
+      ["Nb d'ETP",   r["Nombre d'ETP"]||'—'],
+      ['Site Web',   r['Site Web']?`<a href="${r['Site Web']}" target="_blank">${r['Site Web']}</a>`:'—'],
+      ['Langue',     r['Langue']||'—'],
+      ['Étiquettes', r['Étiquettes']?`<span class="mfield-tag">${r['Étiquettes']}</span>`:'—'],
+      ['Inscription',r["Demande lors de l'inscription"]||'—'],
+    ].map(([l,v])=>`<div class="mfield"><p class="mfield-label">${l}</p><p class="mfield-value">${v}</p></div>`).join('');
+
+    // TVA
+    const vatBtn=document.getElementById('btn-vat');
+    vatBtn.disabled=!r['TVA'];
+    vatBtn.textContent=r['TVA']?`Vérifier ${r['TVA']}`:'TVA non renseignée';
+    document.getElementById('vat-result').style.display='none';
+
+    // Tab Contact
+    const cc=document.getElementById('modal-contact-content');
+    if(r['Nom du contact']){
+      const initC=(r['Nom du contact']||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+      cc.innerHTML=`<div class="contact-card">
+        <div class="contact-avatar">${initC}</div>
+        <div>
+          <p class="contact-name">${r['Nom du contact']}</p>
+          <p class="contact-role">${r['Fonction du contact']||''}</p>
+          ${r['Email du contact']?`<p class="contact-email"><a href="mailto:${r['Email du contact']}">${r['Email du contact']}</a></p>`:''}
+          ${r['Téléphone du contact']?`<p style="font-size:13px;color:var(--muted)">${r['Téléphone du contact']}</p>`:''}
+        </div>
+      </div>`;
+    } else { cc.innerHTML='<p class="state-msg">Aucun contact renseigné.</p>'; }
+
+    // Tab Finance
+    document.getElementById('modal-grid-finance').innerHTML=[
+      ['Budget annuel', r['Budget annuel']?parseFloat(r['Budget annuel']).toLocaleString('fr-BE')+' €':'—'],
+      ["Nombre d'ETP",  r["Nombre d'ETP"]||'—'],
+    ].map(([l,v])=>`<div class="mfield"><p class="mfield-label">${l}</p><p class="mfield-value">${v}</p></div>`).join('');
+
+    // Reset tab
+    document.querySelectorAll('.modal-tab-content').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.modal-tab').forEach(el=>el.classList.remove('active'));
+    document.getElementById('mtab-infos').classList.add('active');
+    document.querySelector('.modal-tab').classList.add('active');
+  }
+
+  function switchModalTab(name,btn){
+    document.querySelectorAll('.modal-tab-content').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.modal-tab').forEach(el=>el.classList.remove('active'));
+    document.getElementById('mtab-'+name).classList.add('active');
+    btn.classList.add('active');
+  }
+  function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
+  function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');currentOrg=null;}
+
+  // ── TVA ──
+  async function checkVAT(){
+    if(!currentOrg)return;
+    const tva=currentOrg['TVA']||''; if(!tva)return;
+    const country=tva.replace(/[^A-Z]/gi,'').substring(0,2).toUpperCase();
+    const number=tva.replace(/[^0-9]/g,'');
+    const btn=document.getElementById('btn-vat'),res=document.getElementById('vat-result');
+    btn.disabled=true;btn.textContent='Vérification…';res.style.display='none';
+    try {
+      const r=await fetch(`${VIES}?country=${country}&number=${number}`);
+      const d=await r.json();
+      res.style.display='inline-block';
+      if(d.valid){res.className='vat-result vat-ok';res.textContent=`✓ Valide${d.name?' — '+d.name:''}`;}
+      else        {res.className='vat-result vat-ko';res.textContent='✗ Non valide';}
+    } catch(e){res.style.display='inline-block';res.className='vat-result vat-na';res.textContent='Erreur';}
+    btn.disabled=false;btn.textContent=`Vérifier ${tva}`;
+  }
+
+  // ── Thème ──
+  function toggleTheme(isLight){
+    document.body.classList.toggle('light', isLight);
+    document.getElementById('theme-track').style.background = isLight ? 'var(--blue)' : 'var(--border)';
+    document.getElementById('theme-thumb').style.transform  = isLight ? 'translateX(18px)' : 'translateX(0)';
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  }
+  // Restaurer thème sauvegardé
+  const _savedTheme = localStorage.getItem('theme')==='light';
+  if(_savedTheme){
+    document.getElementById('theme-switch').checked = true;
+    toggleTheme(true);
+  }
+
+  // Badge
+  fetch(`${API}?table=${TABLE}&size=1`).then(r=>r.json()).then(d=>{
+    document.getElementById('status-badge').textContent=`${d.count} orgs`;
+  }).catch(()=>{});
+</script>
+
+<!-- Modal Éligibilité -->
+<div class="elig-overlay" id="elig-overlay" onclick="closeEligModal(event)" style="display:none;">
+  <div class="elig-modal">
+    <button class="elig-close" onclick="closeEligModalDirect()">×</button>
+    <div class="elig-header">
+      <p class="elig-title" id="elig-org-name">—</p>
+      <p class="elig-sub"   id="elig-org-sector">—</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="elig-contact" id="elig-contact-block">
+      <div class="elig-avatar" id="elig-avatar">?</div>
+      <div>
+        <p class="elig-contact-name"  id="elig-contact-name">—</p>
+        <p class="elig-contact-role"  id="elig-contact-role"></p>
+        <p class="elig-contact-email" id="elig-contact-email"></p>
+      </div>
+    </div>
+
+    <!-- Produits / logiciels -->
+    <p class="elig-section-title">Logiciels &amp; abonnements</p>
+    <div class="elig-cards">
+
+      <div class="elig-card">
+        <img class="elig-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Microsoft_Office_2013-2019_logo_and_wordmark.svg/320px-Microsoft_Office_2013-2019_logo_and_wordmark.svg.png" alt="Microsoft 365">
+        <div>
+          <p class="elig-prod-name">Microsoft 365</p>
+          <p class="elig-prod-date">ASBL — tarif associatif</p>
+        </div>
+        <span class="elig-badge approved">✔ Approuvé</span>
+      </div>
+
+      <div class="elig-card">
+        <img class="elig-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Adobe_Acrobat_DC_icon.svg/200px-Adobe_Acrobat_DC_icon.svg.png" alt="Adobe">
+        <div>
+          <p class="elig-prod-name">Adobe Creative</p>
+          <p class="elig-prod-date">ASBL — 60% de réduction</p>
+        </div>
+        <span class="elig-badge approved">✔ Approuvé</span>
+      </div>
+
+      <div class="elig-card">
+        <img class="elig-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Google_2011_logo.svg/320px-Google_2011_logo.svg.png" alt="Google">
+        <div>
+          <p class="elig-prod-name">Google Workspace</p>
+          <p class="elig-prod-date">Nonprofit — gratuit</p>
+        </div>
+        <span class="elig-badge approved">✔ Approuvé</span>
+      </div>
+
+      <div class="elig-card">
+        <div class="elig-logo-fallback" style="background:linear-gradient(135deg,#00c4cc,#7b2ff7)">🎨</div>
+        <div>
+          <p class="elig-prod-name">Canva for Nonprofits</p>
+          <p class="elig-prod-date">Gratuit pour ASBL</p>
+        </div>
+        <span class="elig-badge approved">✔ Approuvé</span>
+      </div>
+
+      <div class="elig-card">
+        <div class="elig-logo-fallback" style="background:#000">🤖</div>
+        <div>
+          <p class="elig-prod-name">OpenAI for Nonprofits</p>
+          <p class="elig-prod-date">Tarif réduit</p>
+        </div>
+        <span class="elig-badge pending">⏳ En attente</span>
+      </div>
+
+      <div class="elig-card">
+        <div class="elig-logo-fallback" style="background:linear-gradient(135deg,var(--blue-lt),var(--indigo-lt))">📊</div>
+        <div>
+          <p class="elig-prod-name">Airtable Nonprofit</p>
+          <p class="elig-prod-date">Gratuit jusqu'à 5 users</p>
+        </div>
+        <span class="elig-badge pending">⏳ En attente</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
