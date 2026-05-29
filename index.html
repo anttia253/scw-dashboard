@@ -467,19 +467,28 @@
   // ── Par secteur : Société | Secteur | Ville ──
   function renderSecteur(rows){
     const groups={};
-    rows.forEach(r=>{const k=r["Secteur d’activité"]||'—';if(!groups[k])groups[k]=[];groups[k].push(r);});
-    document.getElementById('view-content').innerHTML=Object.keys(groups).sort().map(key=>`
-      <div class="group-block">
-        <p class="group-title">${key} (${groups[key].length})</p>
-        <table class="data-table">
-          <thead><tr><th>Société</th><th>Secteur d’activité</th><th>Ville</th></tr></thead>
-          <tbody>${groups[key].map(r=>`<tr>
-            <td style="font-weight:600;cursor:pointer;color:var(--blue)" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>${r['Nom de la société']||'—'}</td>
-            <td style="color:var(--teal);font-size:13px">${r["Secteur d’activité"]||'—'}</td>
-            <td style="font-size:13px;color:var(--muted)">${r['Ville']||'—'}</td>
-          </tr>`).join('')}</tbody>
-        </table>
-      </div>`).join('');
+    const SECT = "Secteur d’activité";
+    rows.forEach(r=>{const k=r[SECT]||'—';if(!groups[k])groups[k]=[];groups[k].push(r);});
+    const sorted=Object.keys(groups).sort();
+    let rows_html='';
+    sorted.forEach(key=>{
+      rows_html+=`<tr><td colspan="3" style="padding:14px 12px 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);">${key} <span style="font-weight:400;opacity:.7">(${groups[key].length})</span></td></tr>`;
+      groups[key].forEach(r=>{
+        rows_html+=`<tr style="cursor:pointer" onclick='openModalDirect(${JSON.stringify(r).replace(/'/g,"&#39;")},allOrgs)'>
+          <td style="font-weight:600;color:var(--blue)">${r['Nom de la société']||'—'}</td>
+          <td style="color:var(--teal);font-size:13px">${r[SECT]||'—'}</td>
+          <td style="font-size:13px;color:var(--muted)">${r['Ville']||'—'}</td>
+        </tr>`;
+      });
+    });
+    document.getElementById('view-content').innerHTML=`
+      <table class="data-table" style="table-layout:fixed;width:100%">
+        <colgroup><col style="width:35%"><col style="width:40%"><col style="width:25%"></colgroup>
+        <thead style="position:sticky;top:0;background:var(--bg);z-index:1">
+          <tr><th>Société</th><th>Secteur d’activité</th><th>Ville</th></tr>
+        </thead>
+        <tbody>${rows_html}</tbody>
+      </table>`;
   }
 
   function renderEligibilite(rows){
@@ -903,18 +912,4 @@
         <div style="background:#22263a;border:1px solid #2e3248;border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:10px;">
           <div style="width:40px;height:40px;border-radius:10px;background:#FCB400;display:flex;align-items:center;justify-content:center;">
             <svg viewBox="0 0 200 170" width="26" height="22"><rect x="10" y="10" width="180" height="50" rx="8" fill="white" opacity="0.9"/><rect x="10" y="75" width="85" height="85" rx="8" fill="white" opacity="0.9"/><rect x="105" y="75" width="85" height="85" rx="8" fill="white" opacity="0.7"/></svg>
-          </div>
-          <div>
-            <p style="font-size:13px;font-weight:600;color:#eef0f6;">Airtable Nonprofit</p>
-            <p style="font-size:11px;color:#8890b0;margin-top:2px;">Gratuit jusqu'à 5 users</p>
-          </div>
-          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#2e2200;color:#fbbf24;width:fit-content;">⏳ En attente</span>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
+         
