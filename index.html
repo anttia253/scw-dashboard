@@ -475,10 +475,10 @@
     document.getElementById('elig-contact-email').innerHTML  = r['Email du contact']
       ? `<a href="mailto:${r['Email du contact']}">${r['Email du contact']}</a>` : '';
     const eo = document.getElementById('elig-overlay');
-    eo.style.display = 'flex';
+    eo.style.cssText = 'display:flex !important; position:fixed !important; top:0; left:0; right:0; bottom:0; z-index:9999; background:rgba(0,0,0,.7); align-items:center; justify-content:center; padding:1rem;';
   }
   function closeEligModal(e){ if(e.target===document.getElementById('elig-overlay')) closeEligModalDirect(); }
-  function closeEligModalDirect(){ document.getElementById('elig-overlay').style.display='none'; }
+  function closeEligModalDirect(){ document.getElementById('elig-overlay').style.cssText='display:none'; }
 
 
   function renderBudget(rows){
