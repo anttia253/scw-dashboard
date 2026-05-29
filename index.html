@@ -277,7 +277,7 @@
 </div>
 
 <!-- Modal -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)" style="display:none;">
   <div class="modal">
     <!-- Carrousel nav -->
     <div class="modal-nav">
@@ -348,10 +348,22 @@
 
   // ── Launcher ──
   const VIEW_TITLES={
-    orgs:'🏢 Organisations',doublons:'🔍 Doublons',tva:'⚠️ TVA manquante',
-    langue:'🌐 Par langue',secteur:'🏷️ Par secteur',eligibilite:'✅ Éligibilité',
-    commandes:'📋 Commandes',total:'💶 Total / société',recentes:'🕐 Commandes récentes',
-    budget:'📊 Budget annuel',nosite:'🔗 Pas de site web',contacts:'👤 Contacts'
+    orgs:        {t:'🏢 Organisations',      d:'Liste complète avec recherche'},
+    doublons:    {t:'🔍 Doublons',           d:'Noms ou TVA identiques'},
+    tva:         {t:'⚠️ TVA manquante',      d:'Sans numéro TVA'},
+    langue:      {t:'🌐 Par langue',          d:'FR / NL / EN'},
+    secteur:     {t:'🏷️ Par secteur',        d:'Regroupé par activité'},
+    eligibilite: {t:'✅ Éligibilité',         d:'Contact + secteur'},
+    commandes:   {t:'📋 Commandes',           d:'Toutes les commandes'},
+    total:       {t:'💶 Total / société',     d:"Chiffre d'affaires agrégé"},
+    recentes:    {t:'🕐 Récentes',            d:'Commandes triées par date'},
+    budget:      {t:'📊 Budget annuel',       d:'Budget annuel par org'},
+    nosite:      {t:'🔗 Pas de site web',     d:'Site web non renseigné'},
+    contacts:    {t:'👤 Contacts',            d:'Nom, fonction, email'},
+    tel:         {t:'📞 Téléphone',           d:'Org, tél. contact, nom contact'},
+    email:       {t:'✉️ Email',              d:'Org, email contact, nom contact'},
+    adresse:     {t:'📍 Adresse',             d:'Org, adresse, nom contact'},
+    abonnes:     {t:'⭐ Abonnés',             d:'Organisations cotisantes'},
   };
   function openView(name){
     currentView=name; currentPage=1;
@@ -708,14 +720,14 @@
   function openModal(idx){
     modalList=allOrgs; modalIdx=idx;
     renderModal(modalList[modalIdx]);
-    document.getElementById('modal-overlay').classList.add('open');
+    const mo=document.getElementById('modal-overlay'); mo.style.display='flex'; mo.classList.add('open');
   }
   function openModalDirect(r,list){
     modalList=list||allOrgs;
     modalIdx=modalList.findIndex(x=>x.id===r.id);
     if(modalIdx<0){modalList=[r];modalIdx=0;}
     renderModal(r);
-    document.getElementById('modal-overlay').classList.add('open');
+    const mo=document.getElementById('modal-overlay'); mo.style.display='flex'; mo.classList.add('open');
   }
   function navModal(dir){
     modalIdx+=dir;
@@ -929,4 +941,20 @@
         </div>
 
         <div style="background:#22263a;border:1px solid #2e3248;border-radius:14px;padding:1rem;display:flex;flex-direction:column;gap:10px;">
-          <div style="width:40px;height:40px;border-radius:10px;background:#FCB400;display:flex;align-items:center;justify-content:ce
+          <div style="width:40px;height:40px;border-radius:10px;background:#FCB400;display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 200 170" width="26" height="22"><rect x="10" y="10" width="180" height="50" rx="8" fill="white" opacity="0.9"/><rect x="10" y="75" width="85" height="85" rx="8" fill="white" opacity="0.9"/><rect x="105" y="75" width="85" height="85" rx="8" fill="white" opacity="0.7"/></svg>
+          </div>
+          <div>
+            <p style="font-size:13px;font-weight:600;color:#eef0f6;">Airtable Nonprofit</p>
+            <p style="font-size:11px;color:#8890b0;margin-top:2px;">Gratuit jusqu'à 5 users</p>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#2e2200;color:#fbbf24;width:fit-content;">⏳ En attente</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
