@@ -284,7 +284,6 @@
 
 <script>
   const TABLE='995772', TABLE_CMD='996853';
-  const API='/functions/baserow', VIES='/functions/vies';
   const PAGE_SZ=20;
   let currentPage=1, totalCount=0, currentView='';
   let allOrgs=[], currentOrg=null, modalIdx=0, modalList=[];
@@ -299,7 +298,7 @@
   // ── Précharger les sociétés avec commandes ──
   async function preloadCmdSocietes(){
     try {
-      const res=await fetch(`${API}?table=${TABLE_CMD}&size=200`);
+      const res=await fetch(`${BASEROW_BASE}/api/database/rows/table/${TABLE_CMD}/?user_field_names=true&size=200`,{headers:{Authorization:`Token ${BASEROW_TOKEN}`}});
       const data=await res.json();
       (data.results||[]).forEach(r=>{ if(r['Nom de la société']) cmdSocietesSet.add(r['Nom de la société'].trim()); });
     } catch(e){}
@@ -336,10 +335,14 @@
     else await loadCmdView(name);
   }
 
+  const BASEROW_TOKEN = 'xo1fEgednlOaFVvU6tVSHDtzPwTErgg0';
+  const BASEROW_BASE  = 'https://api.baserow.io';
+
   async function fetchOrgs(extra='',size=200,page=1){
-    let url=`${API}?table=${TABLE}&size=${size}&page=${page}`;
-    if(extra) url+=`&filters=${encodeURIComponent(extra)}`;
-    const res=await fetch(url); const data=await res.json();
+    let url=`${BASEROW_BASE}/api/database/rows/table/${TABLE}/?user_field_names=true&size=${size}&page=${page}`;
+    if(extra) url+=`&${extra}`;
+    const res=await fetch(url,{headers:{Authorization:`Token ${BASEROW_TOKEN}`}});
+    const data=await res.json();
     if(!data.results) throw new Error('Réponse invalide');
     return data;
   }
@@ -574,9 +577,9 @@
   async function loadCmdView(name){
     const content=document.getElementById('view-content');
     try {
-      let url=`${API}?table=${TABLE_CMD}&size=${name==='total'?200:PAGE_SZ}&page=${currentPage}`;
+      let url=`${BASEROW_BASE}/api/database/rows/table/${TABLE_CMD}/?user_field_names=true&size=${name==='total'?200:PAGE_SZ}&page=${currentPage}`;
       if(name==='recentes') url+='&order_by=-Date';
-      const res=await fetch(url); const data=await res.json();
+      const res=await fetch(url,{headers:{Authorization:`Token ${BASEROW_TOKEN}`}}); const data=await res.json();
       if(!data.results) throw new Error('Réponse invalide');
       totalCount=data.count;
       if(name==='total') renderTotal(data.results);
@@ -722,7 +725,7 @@
     const btn=document.getElementById('btn-vat'),res=document.getElementById('vat-result');
     btn.disabled=true;btn.textContent='Vérification…';res.style.display='none';
     try {
-      const r=await fetch(`${VIES}?country=${country}&number=${number}`);
+      const r=await fetch(`https://api.vatcomply.com/vat?vat_number=${country}${number}`);
       const d=await r.json();
       res.style.display='inline-block';
       if(d.valid){res.className='vat-result vat-ok';res.textContent=`✓ Valide${d.name?' — '+d.name:''}`;}
@@ -746,7 +749,7 @@
   }
 
   // Badge
-  fetch(`${API}?table=${TABLE}&size=1`).then(r=>r.json()).then(d=>{
+  fetch(`${BASEROW_BASE}/api/database/rows/table/${TABLE}/?user_field_names=true&size=1`,{headers:{Authorization:`Token ${BASEROW_TOKEN}`}}).then(r=>r.json()).then(d=>{
     document.getElementById('status-badge').textContent=`${d.count} orgs`;
   }).catch(()=>{});
 </script>
