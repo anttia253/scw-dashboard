@@ -246,8 +246,8 @@
   <div class="card" style="--cc:var(--pink);  --ci:var(--pink-lt)"   onclick="openView('secteur')">     <div class="card-icon">🏷️</div><div><p class="card-label">Par secteur</p><p class="card-desc">Regroupé par activité</p></div></div>
   <div class="card" style="--cc:var(--indigo);--ci:var(--indigo-lt)" onclick="openView('eligibilite')"> <div class="card-icon">✅</div><div><p class="card-label">Éligibilité</p><p class="card-desc">Contact + secteur</p></div></div>
   <div class="card" style="--cc:var(--green); --ci:var(--green-lt)"  onclick="openView('commandes')">   <div class="card-icon">📋</div><div><p class="card-label">Commandes</p><p class="card-desc">Toutes les commandes</p></div></div>
-  <div class="card" style="--cc:var(--orange);--ci:var(--orange-lt)" onclick="openView('total')">       <div class="card-icon">💶</div><div><p class="card-label">Total facturé</p><p class="card-desc">Chiffre d'affaires agrégé</p></div></div>
-  <div class="card" style="--cc:var(--cyan);  --ci:var(--cyan-lt)"   onclick="openView('recentes')">    <div class="card-icon">🕐</div><div><p class="card-label">Récentes</p><p class="card-desc">Commandes triées par date</p></div></div>
+  <div class="card" style="--cc:var(--orange);--ci:var(--orange-lt)" onclick="openView('total')">       <div class="card-icon">💶</div><div><p class="card-label">Total/Organisation</p><p class="card-desc">Chiffre d'affaires agrégé</p></div></div>
+  <div class="card" style="--cc:var(--cyan);  --ci:var(--cyan-lt)"   onclick="openView('recentes')">    <div class="card-icon">🕐</div><div><p class="card-label">Commandes récentes</p><p class="card-desc">Commandes triées par date</p></div></div>
   <div class="card" style="--cc:var(--lime);  --ci:var(--lime-lt)"   onclick="openView('budget')">      <div class="card-icon">📊</div><div><p class="card-label">Budget</p><p class="card-desc">Budget annuel par org</p></div></div>
   <div class="card" style="--cc:var(--rose);  --ci:var(--rose-lt)"   onclick="openView('nosite')">      <div class="card-icon">🔗</div><div><p class="card-label">Pas de site web</p><p class="card-desc">Site web non renseigné</p></div></div>
   <div class="card" style="--cc:var(--red);   --ci:var(--red-lt)"    onclick="openView('contacts')">    <div class="card-icon">👤</div><div><p class="card-label">Contacts</p><p class="card-desc">Nom, fonction, email</p></div></div>
@@ -355,8 +355,8 @@
     secteur:     {t:'🏷️ Par secteur',        d:'Regroupé par activité'},
     eligibilite: {t:'✅ Éligibilité',         d:'Contact + secteur'},
     commandes:   {t:'📋 Commandes',           d:'Toutes les commandes'},
-    total:       {t:'💶 Total facturé',        d:"Chiffre d'affaires agrégé"},
-    recentes:    {t:'🕐 Récentes',            d:'Commandes triées par date'},
+    total:       {t:'💶 Total/Organisation',   d:'Total facturé par organisation'},
+    recentes:    {t:'🕐 Commandes récentes',  d:'Triées par date décroissante'},
     budget:      {t:'📊 Budget annuel',       d:'Budget annuel par org'},
     nosite:      {t:'🔗 Pas de site web',     d:'Site web non renseigné'},
     contacts:    {t:'👤 Contacts',            d:'Nom, fonction, email'},
@@ -953,4 +953,4 @@
             <p style="font-size:13px;font-weight:600;color:#eef0f6;">Airtable Nonprofit</p>
             <p style="font-size:11px;color:#8890b0;margin-top:2px;">Gratuit jusqu'à 5 users</p>
           </div>
-          <span style="display:inline-flex;align-items:center;gap:5px;font-siz
+          <span style="display:inline-flex;align-items:ce
