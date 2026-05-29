@@ -242,7 +242,7 @@
 </div>
 
 <!-- Vue -->
-<div class="view-overlay" id="view-panel" style="display:none;">
+<div class="view-overlay" id="view-panel" style="display:none;background:var(--bg);">
   <div class="view-inner">
     <div class="view-header">
       <button class="btn-back" onclick="closeView()">← Retour</button>
@@ -340,7 +340,10 @@
   function openView(name){
     currentView=name; currentPage=1;
     document.getElementById('launcher').style.display='none';
-    document.getElementById('view-panel').classList.add('open');
+    const vp = document.getElementById('view-panel');
+    vp.style.display='block';
+    vp.style.background = document.body.classList.contains('light') ? '#f0f2f5' : '#0f1117';
+    vp.classList.add('open');
     document.getElementById('view-search-wrap').style.display=name==='orgs'?'block':'none';
     document.getElementById('view-pagination').style.display=['orgs','commandes','recentes'].includes(name)?'flex':'none';
     document.getElementById('search-bar').value='';
@@ -348,7 +351,9 @@
     loadView(name);
   }
   function closeView(){
-    document.getElementById('view-panel').classList.remove('open');
+    const vp = document.getElementById('view-panel');
+    vp.classList.remove('open');
+    vp.style.display='none';
     document.getElementById('launcher').style.display='grid';
     document.getElementById('view-content').innerHTML='';
   }
@@ -872,13 +877,4 @@
             <p style="font-size:13px;font-weight:600;color:#eef0f6;">Airtable Nonprofit</p>
             <p style="font-size:11px;color:#8890b0;margin-top:2px;">Gratuit jusqu'à 5 users</p>
           </div>
-          <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;background:#2e2200;color:#fbbf24;width:fit-content;">⏳ En attente</span>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
+          <span style="display:inline-flex;align-items:center;gap:5px;font
