@@ -813,7 +813,7 @@
     btn.classList.add('active');
   }
   function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect();}
-  function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');currentOrg=null;}
+  function closeModalDirect(){const mo=document.getElementById('modal-overlay');mo.classList.remove('open');mo.style.display='none';currentOrg=null;}
 
   // ── TVA ──
   async function checkVAT(){
